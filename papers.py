@@ -26,6 +26,41 @@ def decide(input_file, watchlist_file, countries_file):
         an entry or transit visa is required, and whether there is currently a medical advisory
     :return: List of strings. Possible values of strings are: "Accept", "Reject", "Secondary", and "Quarantine"
     """
+    json_input = json.loads(input_file.read())
+    json_watchlist = json.loads(watchlist_file.read())
+    json_countries = json.loads(countries_file.read())
+    return_list = []
+
+    for person in json_input:
+        try:
+            if json_countries[person["from"]["country"].upper()]["medical_advisory"] != "":
+                return_list.append("Quarantine")
+                continue
+        except KeyError:
+            return_list.append("Reject")
+            continue
+        try:
+            if json_countries[person["via"]["country"]]["medical_advisory"] != "":
+                return_list.append("Quarantine")
+                continue
+        except KeyError:
+
+        if not (valid_passport_format(person["passport"]) & valid_date_format(person["birth_date"])):
+            return_list.append("Reject")
+            continue
+
+
+
+
+
+
+            person["first_name"]
+            person["last_name"]
+            person["passport"]
+            person["birth_date"]
+            person["home"]
+            person["from"]
+
     return ["Reject"]
 
 
