@@ -14,6 +14,7 @@ __status__ = "Prototype"
 import re
 import datetime
 import json
+import os.path
 
 
 def decide(input_file, watchlist_file, countries_file):
@@ -26,16 +27,21 @@ def decide(input_file, watchlist_file, countries_file):
         an entry or transit visa is required, and whether there is currently a medical advisory
     :return: List of strings. Possible values of strings are: "Accept", "Reject", "Secondary", and "Quarantine"
     """
-    json_input = json.loads(input_file.read())
-    json_watchlist = json.loads(watchlist_file.read())
-    json_countries = json.loads(countries_file.read())
-    return_list = ["Accept", "Reject", "Secondary", "Quarantine"]
+    script_path = os.path.dirname(__file__)
+    with open(os.path.join(script_path, input_file)) as file_reader:
+        json_input = json.loads(file_reader.read())
+    with open(os.path.join(script_path, watchlist_file)) as file_reader:
+        json_watchlist = json.loads(file_reader.read())
+    with open(os.path.join(script_path, countries_file)) as file_reader:
+        json_countries = json.loads(file_reader.read())
+    return_list = []
 
     for person in json_input:
         try:
-            if json_countries[person["from"]["country"].upper()]["medical_advisory"] != "":
-                return_list.append("Quarantine")
-                continue
+            if person["from"]["country"].upper() != "KAN":
+                if json_countries[person["from"]["country"].upper()]["medical_advisory"] != "":
+                    return_list.append("Quarantine")
+                    continue
         except KeyError:
             return_list.append("Reject")
             continue
@@ -45,7 +51,7 @@ def decide(input_file, watchlist_file, countries_file):
                 return_list.append("Quarantine")
                 continue
         except KeyError:
-            nothing
+            pass
 
         try:
             if not (valid_passport_format(person["passport"]) & valid_date_format(person["birth_date"])):
@@ -58,36 +64,54 @@ def decide(input_file, watchlist_file, countries_file):
         try:
             if person["entry_reason"].lower() == "visit":
                 if json_countries[person["home"]["country"].upper()]["visitor_visa_required"] == "1":
-                    if
+                    if not valid_visa(person["visa"]):
+                        return_list.append("Reject")
+                        continue
+            elif person["entry_reason"].lower() == "transit":
+                if json_countries[person["home"]["country"].upper()]["transit_visa_required"] == "1":
+                    if not valid_visa(person["visa"]):
+                        return_list.append("Reject")
+                        continue
+        except KeyError:
+            return_list.append("Reject")
+            continue
 
-                return_list.append("Reject")
+        try:
+            for poi in json_watchlist:
+                found = 0
+                if (person["first_name"].upper() == poi["first_name"]) | \
+                        (person["last_name"].upper() == poi["last_name"]):
+                    found = 1
+                    return_list.append("Secondary")
+                    break
+                elif person["passport"].upper() == poi["passport"]:
+                    found = 1
+                    return_list.append("Secondary")
+                    break
+            if found == 1:
                 continue
         except KeyError:
             return_list.append("Reject")
             continue
 
+        try:
+            person["home"]["city"]
+            person["home"]["region"]
+            person["home"]["country"]
+            person["from"]["city"]
+            person["from"]["region"]
+        except KeyError:
+            return_list.append("Reject")
+            continue
 
+        return_list.append("Accept")
 
-
-
-
-
-
-
-
-            person["first_name"]
-            person["last_name"]
-            person["passport"]
-            person["birth_date"]
-            person["home"]
-            person["from"]
-
-    return ["Reject"]
+    return return_list
 
 
 def valid_passport_format(passport_number):
     """
-    Checks whether a pasport number is five sets of five alpha-number characters separated by dashes
+    Checks whether a passport number is five sets of five alpha-number characters separated by dashes
     :param passport_number: alpha-numeric string
     :return: Boolean; True if the format is valid, False otherwise
     """
@@ -120,5 +144,11 @@ def valid_visa(visa):
     """
     try:
         if re.compile('.{5}-.{5}').match(visa["code"]):
-            visa_date = datetime.datetime.strptime(visa["date"], '%Y-%m-%d')
+            visa_date = datetime.strptime(visa["date"], '%Y-%m-%d')
+            if visa_date + datetime.datetime(2, 0, 0) > datetime.today():
+                return True
+        return False
+    except KeyError & ValueError:
+        return False
+
 
