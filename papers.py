@@ -77,8 +77,8 @@ def decide(input_file, watchlist_file, countries_file):
             continue
 
         try:
+            found = 0
             for poi in json_watchlist:
-                found = 0
                 if (person["first_name"].upper() == poi["first_name"]) | \
                         (person["last_name"].upper() == poi["last_name"]):
                     found = 1
@@ -135,6 +135,7 @@ def valid_date_format(date_string):
     except ValueError:
         return False
 
+
 def valid_visa(visa):
     """
     Checks whether the visa is valid (its code is two groups of five
@@ -144,11 +145,11 @@ def valid_visa(visa):
     """
     try:
         if re.compile('.{5}-.{5}').match(visa["code"]):
-            visa_date = datetime.strptime(visa["date"], '%Y-%m-%d')
-            if visa_date + datetime.datetime(2, 0, 0) > datetime.today():
+            visa_date = datetime.datetime.strptime(visa["date"], '%Y-%m-%d')
+            if visa_date + datetime.datetime(2, 0, 0) > datetime.datetime.today():
                 return True
         return False
-    except KeyError & ValueError:
+    except (KeyError, ValueError):
         return False
 
 
