@@ -39,15 +39,36 @@ def decide(input_file, watchlist_file, countries_file):
         except KeyError:
             return_list.append("Reject")
             continue
+
         try:
-            if json_countries[person["via"]["country"]]["medical_advisory"] != "":
+            if json_countries[person["via"]["country"].upper()]["medical_advisory"] != "":
                 return_list.append("Quarantine")
                 continue
         except KeyError:
+            nothing
 
-        if not (valid_passport_format(person["passport"]) & valid_date_format(person["birth_date"])):
+        try:
+            if not (valid_passport_format(person["passport"]) & valid_date_format(person["birth_date"])):
+                return_list.append("Reject")
+                continue
+        except KeyError:
             return_list.append("Reject")
             continue
+
+        try:
+            if person["entry_reason"].lower() == "visit":
+                if json_countries[person["home"]["country"].upper()]["visitor_visa_required"] == "1":
+                    if
+
+                return_list.append("Reject")
+                continue
+        except KeyError:
+            return_list.append("Reject")
+            continue
+
+
+
+
 
 
 
@@ -89,3 +110,15 @@ def valid_date_format(date_string):
         return True
     except ValueError:
         return False
+
+def valid_visa(visa):
+    """
+    Checks whether the visa is valid (its code is two groups of five
+    alphanumeric characters separated by a dash, and it's less than 2 years old)
+    :param visa: the visa to be checked
+    :return: Boolean True if the visa is valid, False otherwise
+    """
+    try:
+        if re.compile('.{5}-.{5}').match(visa["code"]):
+            visa_date = datetime.datetime.strptime(visa["date"], '%Y-%m-%d')
+
