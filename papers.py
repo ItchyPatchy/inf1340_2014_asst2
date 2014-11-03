@@ -29,7 +29,7 @@ def decide(input_file, watchlist_file, countries_file):
     json_input = json.loads(input_file.read())
     json_watchlist = json.loads(watchlist_file.read())
     json_countries = json.loads(countries_file.read())
-    return_list = []
+    return_list = ["Accept", "Reject", "Secondary", "Quarantine"]
 
     for person in json_input:
         try:
