@@ -66,15 +66,6 @@ def decide(input_file, watchlist_file, countries_file):
             return_list.append("Reject")
             continue
 
-
-
-
-
-
-
-
-
-
             person["first_name"]
             person["last_name"]
             person["passport"]
@@ -87,7 +78,7 @@ def decide(input_file, watchlist_file, countries_file):
 
 def valid_passport_format(passport_number):
     """
-    Checks whether a pasport number is five sets of five alpha-number characters separated by dashes
+    Checks whether a passport number is five sets of five alpha-number characters separated by dashes
     :param passport_number: alpha-numeric string
     :return: Boolean; True if the format is valid, False otherwise
     """
@@ -111,6 +102,7 @@ def valid_date_format(date_string):
     except ValueError:
         return False
 
+
 def valid_visa(visa):
     """
     Checks whether the visa is valid (its code is two groups of five
@@ -118,7 +110,20 @@ def valid_visa(visa):
     :param visa: the visa to be checked
     :return: Boolean True if the visa is valid, False otherwise
     """
+    from datetime import datetime
+    now = datetime.now()
+    current_year = now.year
+    visa_year = datetime.datetime.strptime(visa["date"], '%Y-%m-%d')
+
     try:
         if re.compile('.{5}-.{5}').match(visa["code"]):
-            visa_date = datetime.datetime.strptime(visa["date"], '%Y-%m-%d')
+            return True
 
+    try:
+        if
+    
+
+
+
+    except ValueError:
+        return False
