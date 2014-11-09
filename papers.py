@@ -35,6 +35,7 @@ def decide(input_file, watchlist_file, countries_file):
     with open(os.path.join(script_path, countries_file)) as file_reader:
         json_countries = json.loads(file_reader.read())
     return_list = []
+    # loads each input file through file reader, and defines as json file.
 
     for person in json_input:
         try:
@@ -42,21 +43,27 @@ def decide(input_file, watchlist_file, countries_file):
                 if json_countries[person["from"]["country"].upper()]["medical_advisory"] != "":
                     return_list.append("Quarantine")
                     continue
+                    # checks if country of origin (not Kanadia) has medical advisory. Returns Quarantine if true
+
         except KeyError:
             return_list.append("Reject")
             continue
+            # return reject on incomplete or incorrect information in this input section
 
         try:
             if json_countries[person["via"]["country"].upper()]["medical_advisory"] != "":
                 return_list.append("Quarantine")
                 continue
+                # checks if person has travelled through country with medical advisory. Returns Quarantine if true.
         except KeyError:
             pass
+            # does nothing if the value under medical advisory is something other than a string value
 
         try:
             if not (valid_passport_format(person["passport"]) & valid_date_format(person["birth_date"])):
                 return_list.append("Reject")
                 continue
+                # checks if passport and birth date adhere to the correct format, as defined by a separate function
         except KeyError:
             return_list.append("Reject")
             continue
@@ -67,11 +74,13 @@ def decide(input_file, watchlist_file, countries_file):
                     if not valid_visa(person["visa"]):
                         return_list.append("Reject")
                         continue
+                        # if entry reason and home country both require a visa, then rejects if input visa is invalid
             elif person["entry_reason"].lower() == "transit":
                 if json_countries[person["home"]["country"].upper()]["transit_visa_required"] == "1":
                     if not valid_visa(person["visa"]):
                         return_list.append("Reject")
                         continue
+                        # if entry reason is transit and a transit visa is needed, then rejects if input visa is invalid
         except KeyError:
             return_list.append("Reject")
             continue
@@ -84,10 +93,12 @@ def decide(input_file, watchlist_file, countries_file):
                     found = 1
                     return_list.append("Secondary")
                     break
+                    # compares first and last name of input to person of interest list for match.  Secondary if true
                 elif person["passport"].upper() == poi["passport"]:
                     found = 1
                     return_list.append("Secondary")
                     break
+                    # compares passport number of input to person of interest list.
             if found == 1:
                 continue
         except KeyError:
@@ -105,6 +116,7 @@ def decide(input_file, watchlist_file, countries_file):
             continue
 
         return_list.append("Accept")
+        # returns accept if all other conditions pass
 
     return return_list
 
