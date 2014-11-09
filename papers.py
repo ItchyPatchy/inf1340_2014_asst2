@@ -146,10 +146,8 @@ def valid_visa(visa):
     try:
         if re.compile('.{5}-.{5}').match(visa["code"]):
             visa_date = datetime.datetime.strptime(visa["date"], '%Y-%m-%d')
-            if visa_date + datetime.datetime(2, 0, 0) > datetime.datetime.today():
+            if visa_date + datetime.timedelta(days=365*2) > datetime.datetime.today():
                 return True
         return False
     except (KeyError, ValueError):
         return False
-
-
