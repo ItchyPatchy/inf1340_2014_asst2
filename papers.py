@@ -57,7 +57,7 @@ def decide(input_file, watchlist_file, countries_file):
                 # checks if person has travelled through country with medical advisory. Returns Quarantine if true.
         except KeyError:
             pass
-            # does nothing if the value under medical advisory is something other than a string value
+            # does nothing since "via" is not a required field
 
         try:
             if not (valid_passport_format(person["passport"]) & valid_date_format(person["birth_date"])):
@@ -67,6 +67,8 @@ def decide(input_file, watchlist_file, countries_file):
         except KeyError:
             return_list.append("Reject")
             continue
+            # return reject on incomplete or incorrect information in this input section
+            # (same reasoning in expression in following except block)
 
         try:
             if person["entry_reason"].lower() == "visit":
@@ -81,6 +83,17 @@ def decide(input_file, watchlist_file, countries_file):
                         return_list.append("Reject")
                         continue
                         # if entry reason is transit and a transit visa is needed, then rejects if input visa is invalid
+        except KeyError:
+            return_list.append("Reject")
+            continue
+
+        # check if fields in "home" and "from" are lacking
+        try:
+            person["home"]["city"]
+            person["home"]["region"]
+            person["home"]["country"]
+            person["from"]["city"]
+            person["from"]["region"]
         except KeyError:
             return_list.append("Reject")
             continue
@@ -105,16 +118,6 @@ def decide(input_file, watchlist_file, countries_file):
             return_list.append("Reject")
             continue
 
-        try:
-            person["home"]["city"]
-            person["home"]["region"]
-            person["home"]["country"]
-            person["from"]["city"]
-            person["from"]["region"]
-        except KeyError:
-            return_list.append("Reject")
-            continue
-
         return_list.append("Accept")
         # returns accept if all other conditions pass
 
@@ -127,7 +130,7 @@ def valid_passport_format(passport_number):
     :param passport_number: alpha-numeric string
     :return: Boolean; True if the format is valid, False otherwise
     """
-    passport_format = re.compile('.{5}-.{5}-.{5}-.{5}-.{5}')
+    passport_format = re.compile('^\w{5}-\w{5}-\w{5}-\w{5}-\w{5}$')
 
     if passport_format.match(passport_number):
         return True
@@ -156,9 +159,9 @@ def valid_visa(visa):
     :return: Boolean True if the visa is valid, False otherwise
     """
     try:
-        if re.compile('.{5}-.{5}').match(visa["code"]):
+        if re.compile('^\w{5}-\w{5}$').match(visa["code"]):
             visa_date = datetime.datetime.strptime(visa["date"], '%Y-%m-%d')
-            if visa_date + datetime.timedelta(days=365*2) > datetime.datetime.today():
+            if visa_date + datetime.timedelta(days=365 * 2) > datetime.datetime.today():
                 return True
         return False
     except (KeyError, ValueError):
